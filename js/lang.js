@@ -1,8 +1,8 @@
 /**
  * MiniASM — Internationalization strings.
  * Each entry in LANGUAGES is a complete set of translatable text.
- * For now only English is defined; add new languages by copying the
- * English object and translating every value.
+ * English is bundled here as the base language.
+ * Additional language packs can register themselves at runtime.
  */
 (function () {
   var LANGUAGES = [
@@ -15,10 +15,19 @@
       btnCode: 'Code',
       btnBlocks: 'Blocks',
       btnRun: 'Run',
+      btnStop: 'Stop',
       btnStep: 'Step',
       btnReset: 'Reset',
       btnTest: '▶ Test',
       btnHint: '💡 Hint',
+      speedLabel: 'Speed',
+      speedInstant: 'Instant',
+      resetOnEdit: 'Reset program on edit',
+      confirmRestart: 'Program has finished. Restart from the beginning?',
+      navTutorials: 'Tutorials',
+      navChallenges: 'Challenges',
+      typeTutorial: 'tutorial',
+      typeChallenge: 'challenge',
 
       // ─── Status bar ───────────────────────────────────────────
       stopped: 'Stopped',
@@ -90,6 +99,9 @@
       catControl: 'Control',
       catComparisons: 'Comparisons',
       catComments: 'Comments',
+      categoryArithmetic: 'Arithmetic',
+      categoryComparisons: 'Comparisons & Logic',
+      categorySwaps: 'Swaps & Rearrangement',
 
       // ─── Challenge/tutorial text (keyed by id) ─────────────────
       exercises: {
@@ -872,20 +884,90 @@
     },
   ];
 
-  // ─── Current language (default: first entry) ─────────────────
-  var current = LANGUAGES[0];
+  function cloneArray(arr) {
+    var out = [];
+    for (var i = 0; i < arr.length; i++) out.push(cloneValue(arr[i]));
+    return out;
+  }
+
+  function cloneObject(obj) {
+    var out = {};
+    for (var key in obj) out[key] = cloneValue(obj[key]);
+    return out;
+  }
+
+  function cloneValue(value) {
+    if (Array.isArray(value)) return cloneArray(value);
+    if (value && typeof value === 'object') return cloneObject(value);
+    return value;
+  }
+
+  function deepMerge(base, extra) {
+    var out = cloneValue(base);
+    for (var key in extra) {
+      var v = extra[key];
+      if (v && typeof v === 'object' && !Array.isArray(v) && out[key] && typeof out[key] === 'object' && !Array.isArray(out[key])) {
+        out[key] = deepMerge(out[key], v);
+      } else {
+        out[key] = cloneValue(v);
+      }
+    }
+    return out;
+  }
+
+  var languageByCode = {};
+  function rebuildLanguageIndex() {
+    languageByCode = {};
+    for (var i = 0; i < LANGUAGES.length; i++) {
+      languageByCode[LANGUAGES[i].code] = LANGUAGES[i];
+    }
+  }
+  rebuildLanguageIndex();
+
+  function getPreferredCode() {
+    try {
+      var saved = localStorage.getItem('miniasm-lang');
+      if (saved) return saved;
+    } catch (e) { /* ignore */ }
+
+    return 'en';
+  }
+
+  var preferredCode = getPreferredCode();
+  var current = languageByCode[preferredCode] || LANGUAGES[0];
+
+  function resolvePath(obj, key) {
+    if (!obj || !key) return undefined;
+    if (Object.prototype.hasOwnProperty.call(obj, key)) return obj[key];
+
+    var parts = key.split('.');
+    var cur = obj;
+    for (var i = 0; i < parts.length; i++) {
+      if (!cur || typeof cur !== 'object' || !Object.prototype.hasOwnProperty.call(cur, parts[i])) {
+        return undefined;
+      }
+      cur = cur[parts[i]];
+    }
+    return cur;
+  }
 
   /**
-   * Get a translated string, with optional placeholder replacement.
-   * Usage: T('hintBox', { num: 1, total: 3, text: '...' })
+   * Get a translated value by key.
+   * Supports key paths (e.g. "exercises.0.title").
+   * For strings, optional placeholders are substituted.
+   * Falls back to English when key is missing in current language.
    */
   function T(key, params) {
-    var s = current[key];
-    if (s === undefined) return key;
-    if (params) {
-      for (var p in params) {
-        s = s.replace(new RegExp('\\{' + p + '\\}', 'g'), params[p]);
-      }
+    var value = resolvePath(current, key);
+    if (value === undefined) value = resolvePath(LANGUAGES[0], key);
+    if (value === undefined) return key;
+
+    if (typeof value !== 'string') return cloneValue(value);
+    if (!params) return value;
+
+    var s = value;
+    for (var p in params) {
+      s = s.replace(new RegExp('\\{' + p + '\\}', 'g'), params[p]);
     }
     return s;
   }
@@ -894,13 +976,33 @@
     LANGUAGES: LANGUAGES,
     current: function () { return current; },
     setCurrent: function (code) {
-      for (var i = 0; i < LANGUAGES.length; i++) {
-        if (LANGUAGES[i].code === code) {
-          current = LANGUAGES[i];
-          return true;
-        }
+      if (languageByCode[code]) {
+        current = languageByCode[code];
+        try { localStorage.setItem('miniasm-lang', code); } catch (e) { /* ignore */ }
+        return true;
       }
       return false;
+    },
+    registerLanguage: function (language, baseCode) {
+      if (!language || !language.code) return false;
+
+      var base = languageByCode[baseCode || LANGUAGES[0].code] || LANGUAGES[0];
+      var merged = deepMerge(base, language);
+      var existing = languageByCode[merged.code];
+
+      if (existing) {
+        for (var i = 0; i < LANGUAGES.length; i++) {
+          if (LANGUAGES[i].code === merged.code) {
+            LANGUAGES[i] = merged;
+            break;
+          }
+        }
+      } else {
+        LANGUAGES.push(merged);
+      }
+      rebuildLanguageIndex();
+      if (preferredCode === merged.code) current = merged;
+      return true;
     },
     T: T,
   };

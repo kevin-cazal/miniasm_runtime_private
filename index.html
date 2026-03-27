@@ -112,6 +112,22 @@
       color: #f9e2af;
       border-color: #6c7086;
     }
+    .nav-lang-select {
+      margin-left: auto;
+      margin-top: 6px;
+      margin-bottom: 6px;
+      height: 30px;
+      border-radius: 4px;
+      border: 1px solid #45475a;
+      background: #313244;
+      color: #cdd6f4;
+      font-family: inherit;
+      font-size: 12px;
+      padding: 0 8px;
+    }
+    .nav-lang-select + .nav-cheat-btn {
+      margin-left: 8px;
+    }
     .nav-cat-header {
       padding: 8px 14px 4px;
       font-size: 11px;
@@ -694,15 +710,16 @@
 <body>
   <!-- ─── Mode navigation ─────────────────────────────────────── -->
   <nav id="mode-nav">
-    <button data-mode="sandbox" class="active">🏖️ Sandbox</button>
+    <button data-mode="sandbox" class="active" data-i18n="sandbox">🏖️ Sandbox</button>
     <div class="nav-dropdown" id="nav-dropdown">
       <button type="button" class="nav-dropdown-toggle" id="nav-dropdown-toggle">
-        <span id="nav-dropdown-label">Challenges ▾</span>
+        <span id="nav-dropdown-label" data-i18n="dropdownPlaceholder">Challenges ▾</span>
       </button>
       <div class="nav-dropdown-menu" id="nav-dropdown-menu">
         <!-- Category items generated dynamically by ui.js -->
       </div>
     </div>
+    <select id="lang-select" class="nav-lang-select" aria-label="Language"></select>
     <button type="button" id="btn-cheat-progress" class="nav-cheat-btn" style="display: none;" title="Jump to any exercise (dev only)">(DEBUG) Jump to exercise</button>
   </nav>
 
@@ -711,19 +728,19 @@
     <div class="panel-editor">
       <div class="toolbar">
         <div class="mode-toggle" role="group" aria-label="Editor mode">
-          <button type="button" id="btn-mode-code" class="active">Code</button>
-          <button type="button" id="btn-mode-blocks">Blocks</button>
+          <button type="button" id="btn-mode-code" class="active" data-i18n="btnCode">Code</button>
+          <button type="button" id="btn-mode-blocks" data-i18n="btnBlocks">Blocks</button>
         </div>
-        <button type="button" class="primary" id="btn-run">Run</button>
-        <button type="button" id="btn-step">Step</button>
-        <button type="button" id="btn-reset">Reset</button>
+        <button type="button" class="primary" id="btn-run" data-i18n="btnRun">Run</button>
+        <button type="button" id="btn-step" data-i18n="btnStep">Step</button>
+        <button type="button" id="btn-reset" data-i18n="btnReset">Reset</button>
 
         <label class="speed-control" id="speed-control">
-          <span class="speed-label">Speed</span>
+          <span class="speed-label" data-i18n="speedLabel">Speed</span>
           <input type="range" id="speed-slider" min="0" max="2000" value="500" step="50" />
           <span class="speed-value" id="speed-value">500ms</span>
         </label>
-        <span class="status" id="status">Stopped</span>
+        <span class="status" id="status" data-i18n="stopped">Stopped</span>
       </div>
       <div class="editor-area">
         <div class="code-wrap active">
@@ -748,8 +765,8 @@
         <div class="ex-body" id="ex-body"></div>
         <div class="ex-available" id="ex-available"></div>
         <div class="ex-actions">
-          <button class="primary" id="btn-panel-test">▶ Test</button>
-          <button id="btn-hint">💡 Hint <span class="ex-hint-count" id="hint-count"></span></button>
+          <button class="primary" id="btn-panel-test" data-i18n="btnTest">▶ Test</button>
+          <button id="btn-hint"><span data-i18n="btnHint">💡 Hint</span> <span class="ex-hint-count" id="hint-count"></span></button>
         </div>
         <div id="ex-hints"></div>
         <div id="test-results"></div>
@@ -761,21 +778,21 @@
             <input type="checkbox" id="chk-reset-on-change" checked />
             <span class="toggle-slider"></span>
           </span>
-          <span class="toggle-text">Reset program on edit</span>
+          <span class="toggle-text" data-i18n="resetOnEdit">Reset program on edit</span>
         </label>
       </div>
 
       <div class="table-block registers">
-        <h3>Registers</h3>
+        <h3 data-i18n="registers">Registers</h3>
         <div class="table-wrap">
           <table id="registers-table">
-            <thead><tr><th>Registers</th><th>Value</th></tr></thead>
+            <thead><tr><th data-i18n="registers">Registers</th><th data-i18n="value">Value</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
       </div>
       <div class="table-block memory">
-        <h3>Memory</h3>
+        <h3 data-i18n="memory">Memory</h3>
         <div class="table-wrap">
           <table id="memory-table">
             <thead><tr id="memory-thead-row"></tr></thead>
@@ -806,6 +823,7 @@
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
   <script src="js/config.js"></script>
   <script src="js/lang.js"></script>
+  <script src="js/lang-fr.js"></script>
   <script src="js/interpreter.js"></script>
   <script src="js/exercises.js"></script>
   <script src="js/blocks-miniasm.js"></script>

@@ -24,6 +24,9 @@ describe('MiniASM UI', () => {
       expect(html).toMatch(/id="nav-dropdown-toggle"/);
       expect(html).toMatch(/id="nav-dropdown-menu"/);
     });
+    it('has debug cheat button in nav', () => {
+      expect(html).toMatch(/id="btn-cheat-progress"/);
+    });
     it('has editor panel with Code/Blocks toggle', () => {
       expect(html).toMatch(/id="btn-mode-code"/);
       expect(html).toMatch(/id="btn-mode-blocks"/);
@@ -74,15 +77,27 @@ describe('MiniASM UI', () => {
     beforeAll(() => {
       require(path.join(__dirname, '../js/config.js'));
       require(path.join(__dirname, '../js/lang.js'));
+      require(path.join(__dirname, '../js/lang-fr.js'));
     });
 
-    it('T returns string for known key', () => {
+    it('T returns string for known key in English', () => {
+      window.MiniASMLang.setCurrent('en');
       const T = window.MiniASMLang.T;
       expect(T('stopped')).toBe('Stopped');
       expect(T('halted')).toBe('Halted');
       expect(T('btnRun')).toBe('Run');
       expect(T('btnStep')).toBe('Step');
       expect(T('btnReset')).toBe('Reset');
+    });
+    it('T returns string for known key in French', () => {
+      window.MiniASMLang.setCurrent('fr');
+      const T = window.MiniASMLang.T;
+      expect(T('stopped')).toBe('Arrêté');
+      expect(T('halted')).toBe('Terminé');
+      expect(T('btnRun')).toBe('Exécuter');
+      expect(T('btnStep')).toBe('Pas à pas');
+      expect(T('btnReset')).toBe('Réinitialiser');
+      window.MiniASMLang.setCurrent('en');
     });
     it('T substitutes placeholders', () => {
       const T = window.MiniASMLang.T;
@@ -91,6 +106,21 @@ describe('MiniASM UI', () => {
       expect(T('hintBox', { num: 1, total: 3, text: 'Hello' })).toMatch(/1/);
       expect(T('hintBox', { num: 1, total: 3, text: 'Hello' })).toMatch(/3/);
       expect(T('hintBox', { num: 1, total: 3, text: 'Hello' })).toMatch(/Hello/);
+    });
+    it('T supports nested translation keys', () => {
+      window.MiniASMLang.setCurrent('en');
+      expect(window.MiniASMLang.T('exercises.0.title')).toBe('Hello, Machine!');
+
+      window.MiniASMLang.setCurrent('fr');
+      expect(window.MiniASMLang.T('exercises.0.title')).toBe('Bonjour, Machine !');
+
+      window.MiniASMLang.setCurrent('en');
+    });
+    it('T can return non-string values for key-path nodes', () => {
+      const ex = window.MiniASMLang.T('exercises.0');
+      expect(ex).toHaveProperty('title');
+      expect(ex).toHaveProperty('hints');
+      expect(Array.isArray(ex.hints)).toBe(true);
     });
     it('T returns key for unknown key', () => {
       const T = window.MiniASMLang.T;
@@ -104,6 +134,49 @@ describe('MiniASM UI', () => {
       expect(current).toHaveProperty('code');
       expect(current).toHaveProperty('name');
       expect(current).toHaveProperty('exercises');
+    });
+    it('supports both English and French language packs', () => {
+      expect(window.MiniASMLang.setCurrent('en')).toBe(true);
+      expect(window.MiniASMLang.current().code).toBe('en');
+      expect(window.MiniASMLang.T('btnTest')).toBe('▶ Test');
+
+      expect(window.MiniASMLang.setCurrent('fr')).toBe(true);
+      expect(window.MiniASMLang.current().code).toBe('fr');
+      expect(window.MiniASMLang.T('btnTest')).toBe('▶ Tester');
+
+      window.MiniASMLang.setCurrent('en');
+    });
+    it('can switch to French language pack', () => {
+      const ok = window.MiniASMLang.setCurrent('fr');
+      expect(ok).toBe(true);
+      expect(window.MiniASMLang.T('btnRun')).toBe('Exécuter');
+      window.MiniASMLang.setCurrent('en');
+    });
+    it('builds exercises under both English and French locales', () => {
+      const exRel = '../js/exercises.js';
+      const exResolved = require.resolve(path.join(__dirname, exRel));
+
+      // English build
+      window.MiniASMLang.setCurrent('en');
+      delete window.MiniASMExercises;
+      delete require.cache[exResolved];
+      jest.isolateModules(() => require(exRel));
+      expect(window.MiniASMExercises.EXERCISES.length).toBeGreaterThan(0);
+      expect(window.MiniASMExercises.EXERCISES[0].title).toMatch(/Hello, Machine!/);
+
+      // French build
+      window.MiniASMLang.setCurrent('fr');
+      delete window.MiniASMExercises;
+      delete require.cache[exResolved];
+      jest.isolateModules(() => require(exRel));
+      expect(window.MiniASMExercises.EXERCISES.length).toBeGreaterThan(0);
+      expect(window.MiniASMExercises.EXERCISES[0].title).toMatch(/Bonjour, Machine !/);
+
+      // Reset to English for the rest of the suite
+      window.MiniASMLang.setCurrent('en');
+      delete window.MiniASMExercises;
+      delete require.cache[exResolved];
+      jest.isolateModules(() => require(exRel));
     });
   });
 

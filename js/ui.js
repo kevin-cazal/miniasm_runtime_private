@@ -277,7 +277,7 @@
     }
     isAutoRunning = false;
     var btn = document.getElementById('btn-run');
-    btn.textContent = 'Run';
+    btn.textContent = T('btnRun');
     btn.classList.remove('stop');
     btn.classList.add('primary');
   }
@@ -291,7 +291,7 @@
 
     // If machine is halted or finished, ask user if they want to restart
     if (machine && (machine.halted || machine.pc >= machine.code.length)) {
-      if (!confirm('Program has finished. Restart from the beginning?')) return;
+      if (!confirm(T('confirmRestart'))) return;
       reset();
     }
 
@@ -313,7 +313,7 @@
     // Switch button to "Stop"
     isAutoRunning = true;
     var btn = document.getElementById('btn-run');
-    btn.textContent = 'Stop';
+    btn.textContent = T('btnStop');
     btn.classList.remove('primary');
     btn.classList.add('stop');
 
@@ -462,7 +462,7 @@
       if (tutorials.length > 0) {
         var tutLabel = document.createElement('div');
         tutLabel.className = 'nav-cat-sublabel';
-        tutLabel.textContent = 'Tutorials';
+        tutLabel.textContent = T('navTutorials');
         menu.appendChild(tutLabel);
 
         for (var t = 0; t < tutorials.length; t++) {
@@ -479,7 +479,7 @@
         }
         var chLabel = document.createElement('div');
         chLabel.className = 'nav-cat-sublabel';
-        chLabel.textContent = 'Challenges';
+        chLabel.textContent = T('navChallenges');
         menu.appendChild(chLabel);
 
         for (var ch = 0; ch < challenges.length; ch++) {
@@ -556,7 +556,8 @@
       meta.className = 'cheat-ex-item-meta';
       var cat = catById[ex.category];
       var catName = cat ? cat.name : ex.category;
-      meta.textContent = catName + ' • ' + ex.type;
+      var typeLabel = ex.type === 'tutorial' ? T('typeTutorial') : T('typeChallenge');
+      meta.textContent = catName + ' • ' + typeLabel;
 
       main.appendChild(title);
       main.appendChild(meta);
@@ -621,7 +622,7 @@
       label.textContent = displayName + ' ▾';
       toggle.classList.add('has-selection');
     } else {
-      label.textContent = 'Challenges ▾';
+      label.textContent = T('dropdownPlaceholder');
       toggle.classList.remove('has-selection');
     }
 
@@ -813,11 +814,63 @@
 
   // ─── Test runner UI ─────────────────────────────────────────────────
 
+  function renderForbiddenInstructions(resultsEl, forbidden, allowed) {
+    var summary = document.createElement('div');
+    summary.className = 'test-summary forbidden';
+
+    var forbiddenTitle = forbidden.length > 1 ? T('forbiddenPlural') : T('forbiddenSingular');
+    var title = document.createElement('div');
+    title.textContent = forbiddenTitle + ':';
+    summary.appendChild(title);
+
+    for (var i = 0; i < forbidden.length; i++) {
+      var err = forbidden[i];
+      var line = document.createElement('div');
+      line.textContent = T('lineLabel') + err.line + ': ' + err.opcode;
+      summary.appendChild(line);
+    }
+
+    var allowedLine = document.createElement('div');
+    allowedLine.textContent = T('allowedLabel') + allowed.join(', ');
+    summary.appendChild(allowedLine);
+
+    resultsEl.appendChild(summary);
+  }
+
+  function makeTestLine(r, fmtIO) {
+    var div = document.createElement('div');
+    div.className = 'test-line';
+
+    if (r.error) {
+      div.classList.add('error');
+      div.textContent = T('testErrorLine', {
+        n: r.index + 1, io: fmtIO(r.inputs), err: r.error
+      });
+      return div;
+    }
+
+    if (r.passed) {
+      div.classList.add('pass');
+      div.textContent = T('testPassLine', {
+        n: r.index + 1, io: fmtIO(r.inputs), actual: fmtIO(r.actual)
+      });
+      return div;
+    }
+
+    div.classList.add('fail');
+    div.textContent = T('testFailLine', {
+      n: r.index + 1, io: fmtIO(r.inputs),
+      expected: fmtIO(r.expected), actual: fmtIO(r.actual)
+    });
+    return div;
+  }
+
   function runTests() {
     if (!currentExercise) return;
     var ex = currentExercise;
     var source = getSource();
     var fmtIO = window.MiniASMExercises.formatIO;
+    var allowed = window.MiniASMExercises.effectiveAvailable(ex);
 
     var result = window.MiniASMExercises.runAllTests(ex, source);
     var resultsEl = document.getElementById('test-results');
@@ -825,44 +878,14 @@
 
     // Forbidden opcodes?
     if (result.forbidden && result.forbidden.length > 0) {
-      var summary = document.createElement('div');
-      summary.className = 'test-summary forbidden';
-      var forbiddenTitle = result.forbidden.length > 1
-        ? T('forbiddenPlural') : T('forbiddenSingular');
-      summary.innerHTML = forbiddenTitle + ':<br>';
-      for (var f = 0; f < result.forbidden.length; f++) {
-        var err = result.forbidden[f];
-        summary.innerHTML += '  ' + T('lineLabel') + err.line + ': <b>' + err.opcode + '</b><br>';
-      }
-      summary.innerHTML += '<br>' + T('allowedLabel') + ex.available.join(', ');
-      resultsEl.appendChild(summary);
+      renderForbiddenInstructions(resultsEl, result.forbidden, allowed);
       return;
     }
 
     // Test lines
     for (var i = 0; i < result.results.length; i++) {
       var r = result.results[i];
-      var div = document.createElement('div');
-      div.className = 'test-line';
-
-      if (r.error) {
-        div.classList.add('error');
-        div.textContent = T('testErrorLine', {
-          n: r.index + 1, io: fmtIO(r.inputs), err: r.error
-        });
-      } else if (r.passed) {
-        div.classList.add('pass');
-        div.textContent = T('testPassLine', {
-          n: r.index + 1, io: fmtIO(r.inputs), actual: fmtIO(r.actual)
-        });
-      } else {
-        div.classList.add('fail');
-        div.textContent = T('testFailLine', {
-          n: r.index + 1, io: fmtIO(r.inputs),
-          expected: fmtIO(r.expected), actual: fmtIO(r.actual)
-        });
-      }
-      resultsEl.appendChild(div);
+      resultsEl.appendChild(makeTestLine(r, fmtIO));
     }
 
     // Summary
@@ -893,7 +916,55 @@
     resultsEl.appendChild(summary);
   }
 
+  function applyTranslations() {
+    var nodes = document.querySelectorAll('[data-i18n]');
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      var key = node.getAttribute('data-i18n');
+      if (!key) continue;
+      node.textContent = T(key);
+    }
+
+    var dropdownLabel = document.getElementById('nav-dropdown-label');
+    if (dropdownLabel && currentModeId !== 'sandbox' && currentExercise) {
+      var displayName = currentExercise.type === 'tutorial'
+        ? currentExercise.title
+        : currentExercise.name;
+      dropdownLabel.textContent = displayName || T('dropdownPlaceholder');
+    }
+
+    var speedValue = document.getElementById('speed-value');
+    var slider = document.getElementById('speed-slider');
+    if (speedValue && slider) {
+      var v = parseInt(slider.value, 10);
+      speedValue.textContent = v === 0 ? T('speedInstant') : v + 'ms';
+    }
+  }
+
+  function setupLanguageSelector() {
+    var select = document.getElementById('lang-select');
+    if (!select) return;
+
+    select.innerHTML = '';
+    var langs = window.MiniASMLang.LANGUAGES;
+    for (var i = 0; i < langs.length; i++) {
+      var opt = document.createElement('option');
+      opt.value = langs[i].code;
+      opt.textContent = langs[i].name;
+      select.appendChild(opt);
+    }
+    select.value = window.MiniASMLang.current().code;
+
+    select.addEventListener('change', function () {
+      if (window.MiniASMLang.setCurrent(this.value)) {
+        location.reload();
+      }
+    });
+  }
+
   // ─── Wire up event handlers ─────────────────────────────────────────
+  setupLanguageSelector();
+  applyTranslations();
 
   document.getElementById('btn-run').addEventListener('click', run);
   document.getElementById('btn-step').addEventListener('click', step);
@@ -902,7 +973,7 @@
   // Speed slider: update displayed value
   document.getElementById('speed-slider').addEventListener('input', function () {
     var v = parseInt(this.value, 10);
-    document.getElementById('speed-value').textContent = v === 0 ? 'Instant' : v + 'ms';
+    document.getElementById('speed-value').textContent = v === 0 ? T('speedInstant') : v + 'ms';
   });
 
   document.getElementById('btn-panel-test').addEventListener('click', runTests);

@@ -4,7 +4,8 @@
  *
  * ─── HOW TO ADD A NEW CHALLENGE ───────────────────────────────────────
  *  1. Add the challenge text (name, title, goal, description, hints,
- *     starterCode) to each language in lang.js under exercises[id].
+ *     starterCode) to each language file (lang.js, lang-fr.js, etc.)
+ *     under exercises[id].
  *  2. Add a category to CATEGORIES (if needed).
  *  3. Append a new data object to EXERCISE_DATA below (id, category,
  *     type, available, unlocks, tests).
@@ -17,7 +18,6 @@
  */
 (function () {
   var T = window.MiniASMLang.T;
-  var lang = window.MiniASMLang.current();
   var CFG = window.MiniASMConfig;
 
   var STORAGE_KEY = 'miniasm-progress';
@@ -25,14 +25,24 @@
   // Primitive instructions — always available
   var PRIMITIVES = ['SET', 'INC', 'DEC', 'ISZ', 'ISN', 'STP', 'JMP'];
 
+  var TEXT_FIELDS = ['name', 'title', 'goal', 'description', 'hints', 'starterCode'];
+  var TEXT_DEFAULTS = {
+    name: '',
+    title: '',
+    goal: '',
+    description: '',
+    hints: [],
+    starterCode: ''
+  };
+
   // ─── Categories ─────────────────────────────────────────────────────
   //
   // Each category groups related tutorials and challenges.
   // Add new categories here; items reference them via `category`.
   var CATEGORIES = [
-    { id: 'arithmetic', name: 'Arithmetic' },
-    { id: 'comparisons', name: 'Comparisons & Logic' },
-    { id: 'swaps', name: 'Swaps & Rearrangement' },
+    { id: 'arithmetic', name: T('categoryArithmetic') },
+    { id: 'comparisons', name: T('categoryComparisons') },
+    { id: 'swaps', name: T('categorySwaps') },
   ];
 
   // ─── Exercise data (structural / non-translatable) ─────────────────
@@ -424,21 +434,21 @@
   // ─── Merge data + language text into full exercise objects ─────────
 
   function buildExercises() {
-    var exTexts = lang.exercises || {};
     var exercises = [];
     for (var i = 0; i < EXERCISE_DATA.length; i++) {
       var data = EXERCISE_DATA[i];
-      var text = exTexts[data.id] || {};
+      var text = window.MiniASMLang.T('exercises.' + data.id);
+      if (!text || typeof text !== 'object') text = {};
       var ex = {};
       // Copy structural data
       for (var key in data) ex[key] = data[key];
-      // Overlay translatable text
-      ex.name        = text.name        || '';
-      ex.title       = text.title       || '';
-      ex.goal        = text.goal        || '';
-      ex.description = text.description || '';
-      ex.hints       = text.hints       || [];
-      ex.starterCode = text.starterCode || '';
+      // Overlay translatable text from language keys
+      for (var t = 0; t < TEXT_FIELDS.length; t++) {
+        var field = TEXT_FIELDS[t];
+        var value = text[field];
+        if (value === undefined || value === null) value = TEXT_DEFAULTS[field];
+        ex[field] = Array.isArray(value) ? value.slice() : value;
+      }
       exercises.push(ex);
     }
     return exercises;
