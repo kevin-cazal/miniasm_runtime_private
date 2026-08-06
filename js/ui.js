@@ -1097,9 +1097,18 @@
       options = options || {};
       document.body.classList.add('embedded');
       if (options.language) {
+        // Exercise text is resolved once, at load, against the language then
+        // current — so switching afterwards would leave the statements in the
+        // old one. The app's own language selector solves this by reloading;
+        // do the same, and only when the language actually differs, which is
+        // what stops it looping (the adapter re-runs on every frame load).
         try {
-          window.MiniASMLang.setCurrent(options.language);
-          applyTranslations();
+          var current = window.MiniASMLang.current();
+          if (current && current.code !== options.language
+              && window.MiniASMLang.setCurrent(options.language)) {
+            location.reload();
+            return;
+          }
         } catch (e) { /* unknown language: keep the current one */ }
       }
     },
