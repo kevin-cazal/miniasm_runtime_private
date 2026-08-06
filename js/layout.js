@@ -75,15 +75,27 @@
     // Default: a vertical split — code on the left, the machine beside it, with
     // the exercise under the machine. Everything is draggable from here, and
     // whatever the participant ends up with is what comes back next time.
+    //
+    // The sizes matter more than they look. Embedded, the whole app is about
+    // half a screen, and dockview's own default gives the second group whatever
+    // is left — which was a strip too narrow to read a register table in. The
+    // machine needs a real share, and a floor for when the pane is dragged
+    // narrow.
     function defaultLayout() {
+      var width = host.clientWidth || 900;
+      var height = host.clientHeight || 600;
+      var machineWidth = Math.max(300, Math.round(width * 0.42));
+
       component.addPanel({ id: 'code', component: 'code', title: defs.code.title });
       component.addPanel({
         id: 'machine', component: 'machine', title: defs.machine.title,
         position: { referencePanel: 'code', direction: 'right' },
+        initialWidth: machineWidth,
       });
       component.addPanel({
         id: 'exercise', component: 'exercise', title: defs.exercise.title,
         position: { referencePanel: 'machine', direction: 'below' },
+        initialHeight: Math.round(height * 0.45),
       });
     }
 
