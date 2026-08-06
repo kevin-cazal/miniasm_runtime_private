@@ -1027,6 +1027,11 @@
     // Relative, so the app works under any path prefix — a workshop platform
     // serves it from /runtime/<id>/<version>/.
     paths: { vs: 'vendor/monaco/vs' },
+    // Monaco's loader derives a locale from the browser and then fetches
+    // `editor.main.nls.<locale>.js`, which the package does not ship for
+    // English — a 404 on every load, and a failed request in a room with no
+    // internet. Pinning the default strings stops it asking.
+    'vs/nls': { availableLanguages: { '*': '' } },
     'vs/nls': { availableLanguages: { '*': 'en' } }
   });
 
