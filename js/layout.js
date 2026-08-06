@@ -90,12 +90,26 @@
       component.addPanel({
         id: 'machine', component: 'machine', title: defs.machine.title,
         position: { referencePanel: 'code', direction: 'right' },
-        initialWidth: machineWidth,
       });
       component.addPanel({
         id: 'exercise', component: 'exercise', title: defs.exercise.title,
         position: { referencePanel: 'machine', direction: 'below' },
-        initialHeight: Math.round(height * 0.45),
+      });
+      // `initialWidth` on addPanel does not survive the split that creates the
+      // group, so the sizes are set afterwards, through the panel API. Checked
+      // by measuring, not by assuming: without this the machine opened as a
+      // strip about 100px wide.
+      sizeAfterLayout(machineWidth, Math.round(height * 0.45));
+    }
+
+    function sizeAfterLayout(machineWidth, exerciseHeight) {
+      requestAnimationFrame(function () {
+        try {
+          var machine = component.getPanel('machine');
+          var exercise = component.getPanel('exercise');
+          if (machine) machine.api.setSize({ width: machineWidth });
+          if (exercise) exercise.api.setSize({ height: exerciseHeight });
+        } catch (e) { /* older dockview: leave the defaults */ }
       });
     }
 
