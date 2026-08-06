@@ -57,12 +57,15 @@ describe('MiniASM UI', () => {
     it('has exercise panel with expected elements', () => {
       expect(html).toMatch(/id="exercise-panel"/);
       expect(html).toMatch(/id="ex-title"/);
-      expect(html).toMatch(/id="ex-goal"/);
-      expect(html).toMatch(/id="ex-body"/);
+      // Not in this port: the statement lives in the platform's markdown, and
+      // the panel keeps only the title (see README).
+      expect(html).not.toMatch(/id="ex-goal"/);
+      expect(html).not.toMatch(/id="ex-body"/);
       expect(html).toMatch(/id="ex-available"/);
       expect(html).toMatch(/id="btn-panel-test"/);
-      expect(html).toMatch(/id="btn-hint"/);
-      expect(html).toMatch(/id="ex-hints"/);
+      // Hints too: CTFd serves them, with its own reveal tracking.
+      expect(html).not.toMatch(/id="btn-hint"/);
+      expect(html).not.toMatch(/id="ex-hints"/);
       expect(html).toMatch(/id="test-results"/);
     });
     it('has Monaco editor container', () => {

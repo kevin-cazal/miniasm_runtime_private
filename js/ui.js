@@ -21,7 +21,6 @@
 
   var currentModeId = 'sandbox';     // 'sandbox' | exercise id (number)
   var currentExercise = null;        // null in sandbox, exercise object otherwise
-  var hintIndices = {};              // exerciseId -> next hint index (session-scoped)
   var autoRunInterval = null;        // setInterval id for auto-stepping
   var isAutoRunning = false;         // whether auto-run is active
   var resetOnChange = true;          // reset program when user edits registers/memory
@@ -752,8 +751,11 @@
     var titleKey = ex.type === 'tutorial' ? 'tutorialPrefix' : 'challengePrefix';
     document.getElementById('ex-title').textContent =
       T(titleKey, { id: ex.id, title: ex.title });
-    document.getElementById('ex-goal').textContent = ex.goal;
-    document.getElementById('ex-body').textContent = ex.description;
+    // Goal, description and hints are NOT rendered here any more: the workshop
+    // platform holds the statement, in markdown, and showing it twice means
+    // maintaining it twice. The title stays so the pane says which exercise is
+    // loaded. The strings remain in lang*.js because they are the source the
+    // platform's importer reads.
 
     // Available instructions (base + unlocked)
     var allowed = window.MiniASMExercises.effectiveAvailable(ex);
@@ -765,51 +767,15 @@
       availEl.appendChild(code);
     }
 
-    // Hint count
-    var seen = hintIndices[ex.id] || 0;
-    var remaining = ex.hints.length - seen;
-    document.getElementById('hint-count').textContent =
-      remaining > 0 ? T('hintsRemaining', { n: remaining }) : T('hintsNone');
-
-    // Clear previous test results and hints display
+    // Hints live in the platform, next to the statement, and it serves them
+    // with CTFd's own reveal tracking — so there is nothing to render here.
     document.getElementById('test-results').innerHTML = '';
-    document.getElementById('ex-hints').innerHTML = '';
-
-    // Re-show previously viewed hints
-    for (var h = 0; h < seen; h++) {
-      appendHintBox(ex.hints[h], h + 1, ex.hints.length);
-    }
 
     // Show completed badge
     if (window.MiniASMExercises.isCompleted(ex.id)) {
       var results = document.getElementById('test-results');
       results.innerHTML = '<div class="test-summary success">' + T('alreadyCompleted') + '</div>';
     }
-  }
-
-  // ─── Hints ──────────────────────────────────────────────────────────
-
-  function appendHintBox(text, num, total) {
-    var hintsEl = document.getElementById('ex-hints');
-    var box = document.createElement('div');
-    box.className = 'hint-box';
-    box.textContent = T('hintBox', { num: num, total: total, text: text });
-    hintsEl.appendChild(box);
-  }
-
-  function showNextHint() {
-    if (!currentExercise) return;
-    var ex = currentExercise;
-    var idx = hintIndices[ex.id] || 0;
-    if (idx >= ex.hints.length) return;
-
-    appendHintBox(ex.hints[idx], idx + 1, ex.hints.length);
-    hintIndices[ex.id] = idx + 1;
-
-    // Update count
-    var remaining = ex.hints.length - (idx + 1);
-    document.getElementById('hint-count').textContent =
-      remaining > 0 ? T('hintsRemaining', { n: remaining }) : T('hintsNone');
   }
 
   // ─── Test runner UI ─────────────────────────────────────────────────
@@ -1011,7 +977,6 @@
   });
 
   document.getElementById('btn-panel-test').addEventListener('click', runTests);
-  document.getElementById('btn-hint').addEventListener('click', showNextHint);
   document.getElementById('btn-mode-code').addEventListener('click', function () { setEditorMode('code'); });
   document.getElementById('btn-mode-blocks').addEventListener('click', function () { setEditorMode('blocks'); });
   document.getElementById('mode-nav').addEventListener('click', handleNavClick);
@@ -1059,7 +1024,9 @@
   // ─── Monaco editor initialization ───────────────────────────────────
 
   require.config({
-    paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' },
+    // Relative, so the app works under any path prefix — a workshop platform
+    // serves it from /runtime/<id>/<version>/.
+    paths: { vs: 'vendor/monaco/vs' },
     'vs/nls': { availableLanguages: { '*': 'en' } }
   });
 

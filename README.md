@@ -15,6 +15,18 @@
 > It is a deterrent and a record, not an exam: everything here runs in the
 > browser, so a participant who reads the source can compute a token without
 > solving anything.
+>
+> **Two other differences from upstream.** Monaco and Blockly are *vendored*
+> (`scripts/vendor.sh` fetches them into `vendor/`, which is gitignored) so a
+> room with no internet keeps its editor. And the exercise panel shows only the
+> **title**: goal, description and hints now live in the platform's markdown,
+> which is the single place they are maintained. The strings stay in `lang*.js`
+> because they are what the platform's importer reads.
+>
+> ```sh
+> scripts/vendor.sh    # once, before serving
+> python3 -m http.server   # then open index.html
+> ```
 
 A browser-based virtual machine and IDE inspired by the [WDR paper computer](https://en.wikipedia.org/wiki/WDR_paper_computer) (Know-how Computer) — the 1983 educational model that used pen, paper, and matches to teach programming. WDR+E (+ extension) keeps the same spirit and a compatible core instruction set, but runs as a web app with registers, memory, and optional block-based editing.
 

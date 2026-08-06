@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>WDR+E — the not only paper computer</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/editor/editor.main.css" />
+  <link rel="stylesheet" href="vendor/monaco/vs/editor/editor.main.css" />
   <style>
     * { box-sizing: border-box; }
     body {
@@ -795,15 +795,12 @@
       <div id="exercise-panel">
         <div class="ex-header">
           <h3 id="ex-title"></h3>
-          <div class="ex-goal" id="ex-goal"></div>
+
         </div>
-        <div class="ex-body" id="ex-body"></div>
         <div class="ex-available" id="ex-available"></div>
         <div class="ex-actions">
           <button class="primary" id="btn-panel-test" data-i18n="btnTest">▶ Test</button>
-          <button id="btn-hint"><span data-i18n="btnHint">💡 Hint</span> <span class="ex-hint-count" id="hint-count"></span></button>
         </div>
-        <div id="ex-hints"></div>
         <div id="test-results"></div>
       </div>
 
@@ -854,8 +851,8 @@
     </div>
   </div>
 
-  <script src="https://unpkg.com/blockly@9.3.3/blockly_compressed.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+  <script src="vendor/blockly/blockly_compressed.js"></script>
+  <script src="vendor/monaco/vs/loader.js"></script>
   <script src="js/config.js"></script>
   <script src="js/lang.js"></script>
   <script src="js/lang-fr.js"></script>
