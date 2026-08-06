@@ -13,6 +13,10 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 VENDOR="$ROOT/vendor"
 MONACO_VERSION=0.45.0
 BLOCKLY_VERSION=9.3.3
+# The same panel layout the platform's other editor runtime uses
+# (tic80-web-editor): resizable, movable, maximizable panes. `dockview-core` is
+# the framework-free build, which is what a vanilla-JS app needs.
+DOCKVIEW_VERSION=1.17.1
 
 mkdir -p "$VENDOR"
 tmp=$(mktemp -d)
@@ -31,5 +35,7 @@ fetch_npm() {
 
 fetch_npm monaco-editor "$MONACO_VERSION" "$VENDOR/monaco" min/vs
 fetch_npm blockly "$BLOCKLY_VERSION" "$VENDOR/blockly" blockly_compressed.js
+# The UMD build carries its own CSS, so there is no stylesheet to load.
+fetch_npm dockview-core "$DOCKVIEW_VERSION" "$VENDOR/dockview" dist/dockview-core.min.js
 
 echo "==> vendored into $VENDOR"

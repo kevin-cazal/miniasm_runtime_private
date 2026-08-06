@@ -610,6 +610,8 @@
     // Sandbox button
     var sandboxBtn = document.querySelector('#mode-nav > button[data-mode="sandbox"]');
     sandboxBtn.classList.toggle('active', currentModeId === 'sandbox');
+    var embedTab = document.getElementById('embed-exercise-tab');
+    if (embedTab) embedTab.classList.toggle('active', currentModeId !== 'sandbox');
 
     // Dropdown toggle
     var toggle = document.getElementById('nav-dropdown-toggle');
@@ -962,6 +964,16 @@
     });
   }
 
+  // Panels first: it moves the app's own containers into dockview, and Monaco
+  // and Blockly must measure themselves inside their final boxes.
+  if (window.MiniASMLayout) {
+    window.MiniASMLayout.start();
+    window.MiniASMLayout.onResize(function () {
+      if (editor) editor.layout();
+      if (window.Blockly && blocklyWorkspace) window.Blockly.svgResize(blocklyWorkspace);
+    });
+  }
+
   // ─── Wire up event handlers ─────────────────────────────────────────
   setupLanguageSelector();
   applyTranslations();
@@ -1115,9 +1127,20 @@
 
     /** Show exercise `id`, as the platform's current step. */
     selectExercise: function (id) {
-      if (!findExercise(id)) return false;
+      var exercise = findExercise(id);
+      if (!exercise) return false;
       switchMode(id);
       updateNavButtons();
+      // The exercise list is hidden when embedded, so without this tab a
+      // participant who clicks Sandbox has no way back to their exercise —
+      // short of touching the platform. One tab, always the current one.
+      var tab = document.getElementById('embed-exercise-tab');
+      if (tab) {
+        var titleKey = exercise.type === 'tutorial' ? 'tutorialPrefix' : 'challengePrefix';
+        tab.textContent = T(titleKey, { id: exercise.id, title: exercise.title });
+        tab.hidden = false;
+        tab.onclick = function () { window.MiniASMEmbed.selectExercise(id); };
+      }
       return true;
     },
 

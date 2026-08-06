@@ -310,6 +310,40 @@
       overflow: hidden;
     }
 
+
+    /* ─── Docked layout ──────────────────────────────── */
+    /*
+       dockview owns the panel boxes; the app's own panels become their content
+       and stop sizing themselves.
+    */
+    #dock { flex: 1; min-height: 0; height: 100%; }
+    .dock-panel { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+    .dock-content { flex: 1; min-height: 0; height: 100%; display: flex; flex-direction: column; }
+    .dock-machine { overflow-y: auto; }
+    body.docked .panel-editor,
+    body.docked .panel-state {
+      flex: 1 1 auto;
+      width: auto;
+      border: none;
+      max-height: none;
+    }
+    body.docked #exercise-panel { max-height: none; overflow-y: auto; }
+    /* dockview's dark theme, tuned to this app's palette. */
+    .dockview-theme-dark {
+      --dv-group-view-background-color: #1e1e2e;
+      --dv-tabs-and-actions-container-background-color: #11111b;
+      --dv-activegroup-visiblepanel-tab-background-color: #1e1e2e;
+      --dv-activegroup-hiddenpanel-tab-background-color: #181825;
+      --dv-inactivegroup-visiblepanel-tab-background-color: #1e1e2e;
+      --dv-inactivegroup-hiddenpanel-tab-background-color: #181825;
+      --dv-activegroup-visiblepanel-tab-color: #89b4fa;
+      --dv-inactivegroup-visiblepanel-tab-color: #6c7086;
+      --dv-separator-border: #313244;
+      --dv-paneview-header-border-color: #313244;
+      --dv-tabs-and-actions-container-font-size: 13px;
+      --dv-tabs-and-actions-container-height: 30px;
+    }
+
     /* ─── Narrow layouts (the workshop pane) ─────────── */
     /*
        Embedded beside a workshop's instructions, the app gets roughly half a
@@ -781,6 +815,7 @@
   <!-- ─── Mode navigation ─────────────────────────────────────── -->
   <nav id="mode-nav">
     <button data-mode="sandbox" class="active" data-i18n="sandbox">🏖️ Sandbox</button>
+    <button type="button" data-mode="exercise" id="embed-exercise-tab" hidden></button>
     <div class="nav-dropdown" id="nav-dropdown">
       <button type="button" class="nav-dropdown-toggle" id="nav-dropdown-toggle">
         <span id="nav-dropdown-label" data-i18n="dropdownPlaceholder">Challenges ▾</span>
@@ -886,6 +921,7 @@
     </div>
   </div>
 
+  <script src="vendor/dockview/dockview-core.min.js"></script>
   <script src="vendor/blockly/blockly_compressed.js"></script>
   <script src="vendor/monaco/vs/loader.js"></script>
   <script src="js/config.js"></script>
@@ -894,6 +930,7 @@
   <script src="js/interpreter.js"></script>
   <script src="js/exercises.js"></script>
   <script src="js/blocks-miniasm.js"></script>
+  <script src="js/layout.js"></script>
   <script src="js/token.js"></script>
   <script src="js/ui.js"></script>
 </body>
