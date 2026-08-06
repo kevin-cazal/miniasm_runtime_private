@@ -1027,12 +1027,12 @@
     // Relative, so the app works under any path prefix — a workshop platform
     // serves it from /runtime/<id>/<version>/.
     paths: { vs: 'vendor/monaco/vs' },
-    // Monaco's loader derives a locale from the browser and then fetches
-    // `editor.main.nls.<locale>.js`, which the package does not ship for
-    // English — a 404 on every load, and a failed request in a room with no
-    // internet. Pinning the default strings stops it asking.
-    'vs/nls': { availableLanguages: { '*': '' } },
-    'vs/nls': { availableLanguages: { '*': 'en' } }
+    // `'*': 'en'` made the loader fetch `editor.main.nls.en.js`, which
+    // monaco-editor does not ship — English is built in — so every load 404'd,
+    // and in the offline room this vendoring is for, that is a failed request
+    // rather than a harmless one. The empty string means "the built-in
+    // strings", which is what was wanted all along.
+    'vs/nls': { availableLanguages: { '*': '' } }
   });
 
   require(['vs/editor/editor.main'], function () {
