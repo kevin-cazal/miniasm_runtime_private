@@ -310,6 +310,41 @@
       overflow: hidden;
     }
 
+    /* ─── Narrow layouts (the workshop pane) ─────────── */
+    /*
+       Embedded beside a workshop's instructions, the app gets roughly half a
+       screen. A fixed 50/50 split then squeezes the register and memory tables
+       until the page itself scrolls sideways, which is how it looked in a
+       CTFd pane. Stack the panels instead, and let each table scroll inside
+       its own block.
+    */
+    body { overflow-x: hidden; }
+    .table-block { overflow-x: auto; }
+
+    @media (max-width: 1100px) {
+      #root { flex-direction: column; }
+      .panel-editor,
+      .panel-state {
+        flex: 1 1 auto;
+        width: 100%;
+        height: auto;
+        min-height: 0;
+      }
+      .panel-editor {
+        border-right: none;
+        border-bottom: 1px solid #313244;
+        min-height: 45vh;
+      }
+      .panel-state { min-height: 0; overflow-y: auto; }
+      #exercise-panel { max-height: none; }
+    }
+
+    /* Embedded: the platform owns the language, the exercise list and the
+       progression, so the app's own controls for them are noise. */
+    body.embedded #lang-select,
+    body.embedded .nav-dropdown,
+    body.embedded #btn-cheat-progress { display: none !important; }
+
     /* ─── Exercise panel ─────────────────────────────── */
     #exercise-panel {
       display: none;

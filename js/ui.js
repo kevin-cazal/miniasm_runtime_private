@@ -1083,4 +1083,39 @@
     updateStatus();
     highlightPCLine();
   });
+
+  /* ─── Embedding ───────────────────────────────────────────────────────
+   *
+   * A workshop platform shows the statement and tracks progress; this app is
+   * the machine beside it. When it says so, hide the controls the platform
+   * owns — the language picker, the exercise list, the dev jump — and let it
+   * choose the exercise, so opening a step there loads the matching one here.
+   */
+  window.MiniASMEmbed = {
+    /** Called once by the host, before anything else it asks for. */
+    enable: function (options) {
+      options = options || {};
+      document.body.classList.add('embedded');
+      if (options.language) {
+        try {
+          window.MiniASMLang.setCurrent(options.language);
+          applyTranslations();
+        } catch (e) { /* unknown language: keep the current one */ }
+      }
+    },
+
+    /** Show exercise `id`, as the platform's current step. */
+    selectExercise: function (id) {
+      if (!findExercise(id)) return false;
+      switchMode(id);
+      updateNavButtons();
+      return true;
+    },
+
+    /** Which exercise is open, or null in the sandbox. */
+    currentExercise: function () {
+      return currentExercise ? currentExercise.id : null;
+    }
+  };
+
 })();
