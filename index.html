@@ -418,6 +418,41 @@
       border-radius: 6px;
       font-size: 13px;
     }
+
+    /* Completion token — only ever shown when the app is embedded and the
+       host supplied a secret (js/token.js). */
+    .completion-token {
+      margin-top: 10px;
+      padding: 8px 10px;
+      background: #181825;
+      border: 1px solid #313244;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #cdd6f4;
+    }
+    .completion-token code {
+      font-family: inherit;
+      color: #a6e3a1;
+      background: #11111b;
+      padding: 2px 8px;
+      border-radius: 3px;
+      user-select: all;
+    }
+    .token-copy {
+      margin-left: auto;
+      font-family: inherit;
+      font-size: 12px;
+      padding: 3px 10px;
+      background: #313244;
+      color: #cdd6f4;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .token-copy:hover { background: #45475a; }
     .test-summary.success {
       background: #a6e3a122;
       color: #a6e3a1;
@@ -827,6 +862,7 @@
   <script src="js/interpreter.js"></script>
   <script src="js/exercises.js"></script>
   <script src="js/blocks-miniasm.js"></script>
+  <script src="js/token.js"></script>
   <script src="js/ui.js"></script>
 </body>
 </html>

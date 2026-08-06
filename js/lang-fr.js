@@ -63,6 +63,9 @@
     testFailLine: '❌ Test {n} : {io} → attendu {expected}, obtenu {actual}',
     allPassed: '🎉 Tous les tests sont passés ! Défi valide !',
     unlockMsg: '🔓 Nouvelle instruction débloquée : {instr}',
+    tokenLabel: 'Jeton de validation : ',
+    tokenCopy: 'Copier',
+    tokenCopied: 'Copié',
     stillPass: '🎉 Tous les tests passent toujours !',
     someFailed: 'Certains tests échouent — continue !',
 

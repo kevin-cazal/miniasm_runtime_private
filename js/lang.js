@@ -64,6 +64,9 @@
       testFailLine: '❌ Test {n}: {io} → expected {expected}, got {actual}',
       allPassed: '🎉 All tests passed! Challenge completed!',
       unlockMsg: '🔓 New instruction unlocked: {instr}',
+      tokenLabel: 'Completion token: ',
+      tokenCopy: 'Copy',
+      tokenCopied: 'Copied',
       stillPass: '🎉 All tests still pass!',
       someFailed: 'Some tests failed — keep trying!',
 

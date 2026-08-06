@@ -1,5 +1,21 @@
 # WDR+E (the not only paper computer)
 
+> **This is the platform port of [kevin-cazal/miniasm](https://github.com/kevin-cazal/miniasm).**
+> It is the same app, with history preserved, plus one addition: when embedded
+> in a workshop platform that supplies `window.MiniASMTokenSecret`, passing an
+> exercise's tests reveals a **completion token** the participant submits there.
+> With no secret set the app behaves exactly as upstream — nothing is revealed,
+> and it still runs standalone from a file:// or a static host.
+>
+> The derivation is `asm{first 12 hex of HMAC-SHA256(secret, "miniasm:<id>")}`
+> (`js/token.js`, `tests/token.test.js`). The platform computes the same value
+> when it imports the exercises, and uses it as the flag. Because the secret is
+> per session, tokens rotate between cohorts.
+>
+> It is a deterrent and a record, not an exam: everything here runs in the
+> browser, so a participant who reads the source can compute a token without
+> solving anything.
+
 A browser-based virtual machine and IDE inspired by the [WDR paper computer](https://en.wikipedia.org/wiki/WDR_paper_computer) (Know-how Computer) — the 1983 educational model that used pen, paper, and matches to teach programming. WDR+E (+ extension) keeps the same spirit and a compatible core instruction set, but runs as a web app with registers, memory, and optional block-based editing.
 
 ---

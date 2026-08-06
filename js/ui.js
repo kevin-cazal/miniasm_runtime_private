@@ -865,6 +865,39 @@
     return div;
   }
 
+  /**
+   * Show the completion token, when the app is embedded in a platform that
+   * supplied a secret (js/token.js). Standalone, this does nothing at all.
+   *
+   * Shown on every pass, not only the first: a participant who solved an
+   * exercise before the platform was open still needs the token.
+   */
+  function revealToken(summary, exerciseId) {
+    if (!window.MiniASMToken) return;
+    window.MiniASMToken.tokenFor(exerciseId).then(function (token) {
+      if (!token) return;
+      var box = document.createElement('div');
+      box.className = 'completion-token';
+      var label = document.createElement('span');
+      label.textContent = T('tokenLabel');
+      var code = document.createElement('code');
+      code.textContent = token;
+      code.setAttribute('data-token', token);
+      var copy = document.createElement('button');
+      copy.type = 'button';
+      copy.className = 'token-copy';
+      copy.textContent = T('tokenCopy');
+      copy.addEventListener('click', function () {
+        if (navigator.clipboard) navigator.clipboard.writeText(token);
+        copy.textContent = T('tokenCopied');
+      });
+      box.appendChild(label);
+      box.appendChild(code);
+      box.appendChild(copy);
+      summary.appendChild(box);
+    });
+  }
+
   function runTests() {
     if (!currentExercise) return;
     var ex = currentExercise;
@@ -893,6 +926,7 @@
     summary.className = 'test-summary';
 
     if (result.allPassed) {
+      revealToken(summary, ex.id);
       var wasAlreadyDone = window.MiniASMExercises.isCompleted(ex.id);
       if (!wasAlreadyDone) {
         window.MiniASMExercises.markCompleted(ex.id);
