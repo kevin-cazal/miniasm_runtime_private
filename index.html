@@ -691,11 +691,15 @@
        of three digits need about 300px, which the pane has at both sizes the
        workshop is used at.
     */
-    #memory-table { table-layout: fixed; }
+    #memory-table,
+    #registers-table { table-layout: fixed; }
     #memory-table th,
-    #memory-table td { padding: 8px 2px; text-align: center; }
+    #memory-table td,
+    #registers-table th,
+    #registers-table td { padding: 8px 2px; text-align: center; }
+    /* Wide enough for "@56", the last row's label. */
     #memory-table th:first-child,
-    #memory-table td:first-child { width: 2.4em; }
+    #memory-table td:first-child { width: 3em; }
     .table-block:last-child { border-bottom: none; }
     .table-block h3 {
       margin: 0;
@@ -989,10 +993,11 @@
         <h3 data-i18n="registers">Registers</h3>
         <div class="table-wrap">
           <table id="registers-table">
-            <!-- The block already carries the heading "Registers"; repeating it
-                 as the first column header printed the word twice, one line
-                 apart. The memory table leaves the same cell empty. -->
-            <thead><tr><th></th><th data-i18n="value">Value</th></tr></thead>
+            <!-- One column per register, one row of values: four registers laid
+                 out down the page spent five rows of height to say what fits on
+                 two, and left most of the width empty. The header row carries
+                 the names, so the block heading is not repeated either. -->
+            <thead><tr id="registers-thead-row"></tr></thead>
             <tbody></tbody>
           </table>
         </div>

@@ -15,6 +15,13 @@
  */
 (function () {
   var STORAGE_KEY = 'miniasm-layout';
+  // Bump when the default arrangement changes shape. A saved layout is the
+  // participant's, and normally wins — but it also outlives the release that
+  // produced it, and the platform syncs it to the server, so it follows them
+  // to the next machine. Without this, everyone who had already opened the app
+  // would keep the old stacked panels for ever and never see the tabs.
+  // 2: Machine and Exercice became tabs of one group.
+  var LAYOUT_VERSION = 2;
   var resizeHandlers = [];
 
   function api() {
@@ -57,6 +64,14 @@
 
     var component = dockview.createDockview(host, {
       className: 'dockview-theme-dark',
+      // dockview detaches a panel's DOM when its tab is not the active one
+      // ('onlyWhenVisible', its default). That is fine for a panel a component
+      // rebuilds on demand, and wrong here: these panels *are* the app's DOM,
+      // and ui.js reaches into them by id from the top level. With Machine and
+      // Exercice sharing a group, the hidden one's elements left the document
+      // — getElementById returned null, and the listener wiring threw before
+      // it finished. Keep every panel mounted.
+      defaultRenderer: 'always',
       createComponent: function (options) {
         var def = defs[options.name];
         var element = document.createElement('div');
@@ -72,24 +87,32 @@
       },
     });
 
-    // Default: a vertical split — code on the left, the machine beside it, with
-    // the exercise under the machine. Everything is draggable from here, and
-    // whatever the participant ends up with is what comes back next time.
+    // Default: code on the left, and beside it one column holding Machine and
+    // Exercice as two tabs of the same group. Everything is draggable from
+    // here, and whatever the participant ends up with is what comes back next
+    // time.
     //
-    // The sizes matter more than they look. Embedded, the whole app is about
-    // half a screen, and dockview's own default gives the second group whatever
-    // is left — which was a strip too narrow to read a register table in. The
-    // machine needs a real share, and a floor for when the pane is dragged
-    // narrow.
+    // Tabs rather than a stack because the two do not fit above each other.
+    // Memory is eight rows; the exercise holds a title, the allowed
+    // instructions, a button and the results. Split vertically, on a 1280x800
+    // laptop, neither got enough: the memory table showed one row. Sharing the
+    // column full height, each is whole, and the cost is a click to go between
+    // them.
+    //
+    // Exercice opens active, because "Tester" lives in it and that is the
+    // button every step ends with — a primary action behind a tab is the same
+    // dead end as a primary action behind a covered toggle. The machine comes
+    // forward on its own the moment it becomes interesting, which is when the
+    // student runs or steps (ui.js calls focus() from both).
     function defaultLayout() {
       component.addPanel({ id: 'code', component: 'code', title: defs.code.title });
       component.addPanel({
-        id: 'machine', component: 'machine', title: defs.machine.title,
+        id: 'exercise', component: 'exercise', title: defs.exercise.title,
         position: { referencePanel: 'code', direction: 'right' },
       });
       component.addPanel({
-        id: 'exercise', component: 'exercise', title: defs.exercise.title,
-        position: { referencePanel: 'machine', direction: 'below' },
+        id: 'machine', component: 'machine', title: defs.machine.title,
+        position: { referencePanel: 'exercise', direction: 'within' },
       });
       // `initialWidth` on addPanel does not survive the split that creates the
       // group, so the sizes are set afterwards, through the panel API. Checked
@@ -121,17 +144,12 @@
         }
         try {
           var machine = component.getPanel('machine');
-          var exercise = component.getPanel('exercise');
-          // A floor for the machine: a register table narrower than this is
-          // unreadable, and the pane can be dragged narrow.
+          // A floor for the machine: a memory table narrower than this is
+          // unreadable, and the pane can be dragged narrow. Height needs no
+          // share now — Machine and Exercice are tabs, so each has the column.
           if (machine) machine.api.setSize({ width: Math.max(300, Math.round(width * 0.42)) });
-          // The exercise panel holds a title, the allowed instructions, one
-          // button and the results — a fixed amount of content. Given a share
-          // of the column it took half, and on a 1280x800 laptop that left the
-          // memory table under it about 50px tall: one sliced row. Cap it —
-          // but not below what a failing run needs, or the verdict under the
-          // test lines is the thing that falls off the bottom.
-          if (exercise) exercise.api.setSize({ height: Math.min(340, Math.round(height * 0.45)) });
+          var exercise = component.getPanel('exercise');
+          if (exercise) exercise.api.setActive();
         } catch (e) { /* older dockview: leave the defaults */ }
       });
     }
@@ -150,9 +168,9 @@
 
     var restored = false;
     try {
-      var saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        component.fromJSON(JSON.parse(saved));
+      var saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (saved && saved.v === LAYOUT_VERSION && saved.layout) {
+        component.fromJSON(saved.layout);
         restored = component.panels.length > 0 && isComplete();
       }
     } catch (e) {
@@ -165,7 +183,8 @@
 
     var save = function () {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(component.toJSON()));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(
+          { v: LAYOUT_VERSION, layout: component.toJSON() }));
       } catch (e) { /* private mode, or quota */ }
     };
     component.onDidLayoutChange(save);
@@ -194,6 +213,20 @@
     },
     /** Re-measure hook for anything that caches its own size. */
     onResize: function (handler) { resizeHandlers.push(handler); },
+    /**
+     * Bring a panel forward. Machine and Exercice share a group, so a result
+     * written into a tab nobody is looking at is a result nobody reads — the
+     * test run calls this. Silent when the panel is not there, or when the
+     * participant has dragged it into a group of its own and it is already
+     * visible.
+     */
+    focus: function (id) {
+      if (!this.component) return;
+      try {
+        var panel = this.component.getPanel(id);
+        if (panel) panel.api.setActive();
+      } catch (e) { /* nothing worth breaking a test run over */ }
+    },
     /** Put the panels back where they started. */
     reset: function () {
       try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }

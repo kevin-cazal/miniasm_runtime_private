@@ -59,10 +59,14 @@ describe('MiniASM UI', () => {
       expect(html).toMatch(/<thead/);
       expect(html).toMatch(/<tbody/);
     });
-    it('does not repeat the "Registers" heading in the table header', () => {
+    it('builds the register header from the register names', () => {
+      // One column per register, filled by refreshRegisters(), so the markup
+      // carries an empty row and neither the block heading nor a "Value"
+      // label — both of which used to be printed twice.
       const thead = html.match(/<table id="registers-table">[\s\S]*?<\/thead>/)[0];
+      expect(thead).toMatch(/id="registers-thead-row"/);
       expect(thead).not.toMatch(/data-i18n="registers"/);
-      expect(thead).toMatch(/data-i18n="value"/);
+      expect(thead).not.toMatch(/data-i18n="value"/);
     });
     it('has memory table', () => {
       expect(html).toMatch(/id="memory-table"/);

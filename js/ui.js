@@ -103,25 +103,37 @@
 
   // ─── Registers & memory tables ──────────────────────────────────────
 
+  /** No-op when the panels are not docked, or already showing the machine. */
+  function showMachine() {
+    if (window.MiniASMLayout) window.MiniASMLayout.focus('machine');
+  }
+
   function refreshRegisters() {
+    var theadRow = document.getElementById('registers-thead-row');
     var tbody = document.querySelector('#registers-table tbody');
+    theadRow.innerHTML = '';
     tbody.innerHTML = '';
+    for (var i = 0; i < REG_NAMES.length; i++) {
+      var th = document.createElement('th');
+      th.className = 'reg-name';
+      th.textContent = REG_NAMES[i];
+      theadRow.appendChild(th);
+    }
     if (!machine) return;
     var editable = canEditState();
-    for (var i = 0; i < REG_NAMES.length; i++) {
-      var tr = document.createElement('tr');
-      var tdVal = document.createElement('td');
-      tdVal.className = 'value';
-      tdVal.textContent = String(machine.registers[i] ?? 0);
+    var tr = document.createElement('tr');
+    for (var j = 0; j < REG_NAMES.length; j++) {
+      var td = document.createElement('td');
+      td.className = 'value';
+      td.textContent = String(machine.registers[j] ?? 0);
       if (editable) {
-        tdVal.setAttribute('contenteditable', 'true');
-        tdVal.setAttribute('data-reg', String(i));
-        tdVal.setAttribute('spellcheck', 'false');
+        td.setAttribute('contenteditable', 'true');
+        td.setAttribute('data-reg', String(j));
+        td.setAttribute('spellcheck', 'false');
       }
-      tr.innerHTML = '<td class="reg-name">' + REG_NAMES[i] + '</td>';
-      tr.appendChild(tdVal);
-      tbody.appendChild(tr);
+      tr.appendChild(td);
     }
+    tbody.appendChild(tr);
   }
 
   function refreshMemory() {
@@ -144,7 +156,11 @@
       var tr = document.createElement('tr');
       var tdLine = document.createElement('td');
       tdLine.className = 'addr';
-      tdLine.textContent = String(row);
+      // The address the row starts at, not the row's number: a statement says
+      // "@37", and the student should be able to find it by reading down to
+      // @32 and across five, instead of multiplying the row by the column
+      // count first. The column headers are the offset to add.
+      tdLine.textContent = CFG.memory.prefix + (row * MEMORY_COLS);
       tr.appendChild(tdLine);
       for (var col = 0; col < MEMORY_COLS; col++) {
         var idx = row * MEMORY_COLS + col;
@@ -296,6 +312,10 @@
       stopAutoRun();
       return;
     }
+    // Running is only interesting for what it does to the registers and the
+    // memory, and those share a tab group with the exercise. Bring them
+    // forward: the toolbar is always on screen, the machine may not be.
+    showMachine();
 
     // If machine is halted or finished, ask user if they want to restart
     if (machine && (machine.halted || machine.pc >= machine.code.length)) {
@@ -362,6 +382,7 @@
   }
 
   function step() {
+    showMachine();
     if (!machine) {
       if (!loadProgram()) return;
     }
