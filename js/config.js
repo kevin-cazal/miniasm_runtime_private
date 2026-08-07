@@ -26,7 +26,11 @@
     // ─── Memory ────────────────────────────────────────────────
     memory: {
       size: 64,          // total addressable cells (@0 … @size-1)
-      columns: 16,       // columns in the UI memory table
+      // 8, not 16: the app lives in a workshop pane about half a screen wide,
+      // and 17 columns of three digits do not fit it. They did not fit before
+      // either — the table simply scrolled sideways inside a block that scrolls
+      // down, so half of memory was off screen with nothing to say so.
+      columns: 8,        // columns in the UI memory table
       prefix: '@',       // single-char prefix used in source code
     },
 

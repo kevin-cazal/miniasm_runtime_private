@@ -213,7 +213,11 @@ describe('MiniASM UI', () => {
     it('has memory.size and columns', () => {
       const CFG = window.MiniASMConfig;
       expect(CFG.memory.size).toBe(64);
-      expect(CFG.memory.columns).toBe(16);
+      // 8 so the table fits the workshop pane. What actually has to hold is
+      // that the rows divide the memory exactly — refreshMemory() walks
+      // size / columns rows and would drop or invent cells otherwise.
+      expect(CFG.memory.columns).toBe(8);
+      expect(CFG.memory.size % CFG.memory.columns).toBe(0);
     });
     it('has REG_NAMES array', () => {
       expect(window.MiniASMConfig.REG_NAMES).toEqual(['r0', 'r1', 'r2', 'r3']);

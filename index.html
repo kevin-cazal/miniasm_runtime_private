@@ -684,6 +684,18 @@
     */
     .table-block.memory { flex: 0 0 auto; }
     .table-block.memory .table-wrap { overflow-y: visible; }
+    /*
+       And let it fit sideways, whatever the pane is worth. Auto layout sizes
+       the columns to their content and overflows when the pane is narrower
+       than the sum; fixed layout shares out what there is. Nine equal columns
+       of three digits need about 300px, which the pane has at both sizes the
+       workshop is used at.
+    */
+    #memory-table { table-layout: fixed; }
+    #memory-table th,
+    #memory-table td { padding: 8px 2px; text-align: center; }
+    #memory-table th:first-child,
+    #memory-table td:first-child { width: 2.4em; }
     .table-block:last-child { border-bottom: none; }
     .table-block h3 {
       margin: 0;
