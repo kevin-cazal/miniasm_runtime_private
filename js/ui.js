@@ -101,12 +101,44 @@
     return window.MiniASMExercises.PRIMITIVES.concat(unlocked);
   }
 
-  // ─── Registers & memory tables ──────────────────────────────────────
+  // ─── The exercise bar ───────────────────────────────────────────────
+  /*
+     Collapsed by default: what a student needs to keep working is the title,
+     the opcodes they may use and the button — and those live in the bar. The
+     drawer under it holds the test lines and the verdict, which are worth
+     reading after pressing Tester and not before, so pressing Tester opens it.
+     The choice is remembered, like the panel layout.
+  */
+  var COLLAPSE_KEY = 'miniasm-exercise-collapsed';
 
-  /** No-op when the panels are not docked, or already showing the machine. */
-  function showMachine() {
-    if (window.MiniASMLayout) window.MiniASMLayout.focus('machine');
+  function exerciseCollapsed() {
+    var panel = document.getElementById('exercise-panel');
+    return !panel || panel.classList.contains('collapsed');
   }
+
+  function setExerciseCollapsed(collapsed, remember) {
+    var panel = document.getElementById('exercise-panel');
+    var toggle = document.getElementById('btn-ex-toggle');
+    if (!panel) return;
+    panel.classList.toggle('collapsed', collapsed);
+    if (toggle) {
+      toggle.textContent = collapsed ? '▲' : '▼';
+      toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      toggle.title = T(collapsed ? 'exShowResults' : 'exHideResults');
+    }
+    if (remember !== false) {
+      try { localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0'); } catch (e) { /* ignore */ }
+    }
+    if (window.MiniASMLayout) window.MiniASMLayout.notifyResize();
+  }
+
+  function restoreExerciseCollapsed() {
+    var saved = null;
+    try { saved = localStorage.getItem(COLLAPSE_KEY); } catch (e) { /* ignore */ }
+    setExerciseCollapsed(saved !== '0', false);
+  }
+
+  // ─── Registers & memory tables ──────────────────────────────────────
 
   function refreshRegisters() {
     var theadRow = document.getElementById('registers-thead-row');
@@ -312,10 +344,6 @@
       stopAutoRun();
       return;
     }
-    // Running is only interesting for what it does to the registers and the
-    // memory, and those share a tab group with the exercise. Bring them
-    // forward: the toolbar is always on screen, the machine may not be.
-    showMachine();
 
     // If machine is halted or finished, ask user if they want to restart
     if (machine && (machine.halted || machine.pc >= machine.code.length)) {
@@ -382,7 +410,6 @@
   }
 
   function step() {
-    showMachine();
     if (!machine) {
       if (!loadProgram()) return;
     }
@@ -914,6 +941,9 @@
 
   function runTests() {
     if (!currentExercise) return;
+    // Everything this writes goes in the drawer. Open it, or the student
+    // presses the button and nothing appears to happen.
+    setExerciseCollapsed(false);
     var ex = currentExercise;
     var source = getSource();
     var fmtIO = window.MiniASMExercises.formatIO;
@@ -1035,6 +1065,10 @@
   });
 
   document.getElementById('btn-panel-test').addEventListener('click', runTests);
+  document.getElementById('btn-ex-toggle').addEventListener('click', function () {
+    setExerciseCollapsed(!exerciseCollapsed());
+  });
+  restoreExerciseCollapsed();
   document.getElementById('btn-mode-code').addEventListener('click', function () { setEditorMode('code'); });
   document.getElementById('btn-mode-blocks').addEventListener('click', function () { setEditorMode('blocks'); });
   document.getElementById('mode-nav').addEventListener('click', handleNavClick);
@@ -1110,7 +1144,14 @@
       fontSize: 14,
       minimap: { enabled: false },
       scrollBeyondLastLine: false,
-      lineNumbers: 'on'
+      lineNumbers: 'on',
+      // Monaco measures its box once and then paints at that size, absolutely
+      // positioned — so a container that shrinks leaves the editor's own DOM
+      // hanging outside it, invisible but still swallowing clicks. The exercise
+      // bar appearing under the dock is exactly that kind of shrink, and it
+      // made the collapse button unclickable. Let Monaco watch its own box
+      // rather than depending on being told.
+      automaticLayout: true
     });
 
     function lineNumbersForLine(lineNumber) {

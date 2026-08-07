@@ -25,6 +25,8 @@
       resetOnEdit: 'Reset program on edit',
       confirmRestart: 'Program has finished. Restart from the beginning?',
       layoutReset: 'Reset panels',
+      exShowResults: 'Show the test results',
+      exHideResults: 'Hide the test results',
       navTutorials: 'Tutorials',
       navChallenges: 'Challenges',
       typeTutorial: 'tutorial',

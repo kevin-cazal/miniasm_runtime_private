@@ -24,6 +24,8 @@
     resetOnEdit: 'Réinitialiser le programme à chaque édition',
     confirmRestart: 'Le programme est terminé. Recommencer depuis le début ?',
     layoutReset: 'Replacer les panneaux',
+    exShowResults: 'Voir les résultats des tests',
+    exHideResults: 'Masquer les résultats des tests',
     navTutorials: 'Tutoriels',
     navChallenges: 'Défis',
     typeTutorial: 'tutoriel',

@@ -372,7 +372,75 @@
       border: none;
       max-height: none;
     }
-    body.docked #exercise-panel { max-height: none; overflow-y: auto; }
+    /*
+       Docked, the exercise is not a panel beside the others — it is a bar
+       across the bottom of the whole app, the way an editor keeps its terminal.
+       Code and the machine are what a student works in, and both stay on screen
+       whatever the exercise is doing. The drawer opens over the bottom of the
+       app and closes again; it never takes width from either.
+    */
+    body.docked #root { flex-direction: column; }
+    body.docked #dock { flex: 1 1 auto; min-height: 0; height: auto; }
+    body.docked #exercise-panel {
+      flex: 0 0 auto;
+      max-height: 45%;
+      overflow: hidden;
+      border-top: 1px solid #313244;
+      border-bottom: none;
+    }
+    body.docked #exercise-panel.collapsed { max-height: none; }
+    .ex-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px;
+      background: #181825;
+    }
+    .ex-bar h3 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: #89b4fa;
+      white-space: nowrap;
+    }
+    /* The opcode list is the part that gives: it shortens before the title or
+       the button do, and disappears entirely on a very narrow pane. */
+    .ex-bar .ex-available {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .ex-bar .ex-actions {
+      flex: 0 0 auto;
+      margin-left: auto;
+      padding: 0;
+      border-top: none;
+      background: none;
+    }
+    .ex-toggle {
+      flex: 0 0 auto;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #313244;
+      color: #cdd6f4;
+      font-family: inherit;
+      font-size: 11px;
+      line-height: 22px;
+    }
+    .ex-toggle:hover { background: #45475a; }
+    .ex-drawer {
+      overflow-y: auto;
+      min-height: 0;
+      border-top: 1px solid #313244;
+    }
+    #exercise-panel.collapsed .ex-drawer { display: none; }
     /*
        No close button on the tabs. The three panels are the app: closing Code
        takes the editor and the whole toolbar with it, and since ui.js wires
@@ -966,17 +1034,24 @@
     <!-- ─── State panel ─────────────────────────────────────── -->
     <div class="panel-state">
       <!-- Exercise info (hidden in sandbox mode) -->
+      <!-- A bar across the bottom, and a drawer under it. Collapsed, the bar
+           still carries everything needed to work: which exercise, which
+           opcodes are allowed, and the button that runs the tests. The drawer
+           holds what only matters once you have pressed it. -->
       <div id="exercise-panel">
-        <div class="ex-header">
+        <div class="ex-bar">
+          <button type="button" id="btn-ex-toggle" class="ex-toggle"
+                  aria-controls="ex-drawer" aria-expanded="false"></button>
           <h3 id="ex-title"></h3>
-
+          <div class="ex-available" id="ex-available"></div>
+          <div class="ex-actions">
+            <button class="primary" id="btn-panel-test" data-i18n="btnTest">▶ Test</button>
+          </div>
         </div>
-        <div class="ex-note" id="ex-sandbox-note"></div>
-        <div class="ex-available" id="ex-available"></div>
-        <div class="ex-actions">
-          <button class="primary" id="btn-panel-test" data-i18n="btnTest">▶ Test</button>
+        <div class="ex-drawer" id="ex-drawer">
+          <div class="ex-note" id="ex-sandbox-note"></div>
+          <div id="test-results"></div>
         </div>
-        <div id="test-results"></div>
       </div>
 
       <div class="state-options">

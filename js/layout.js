@@ -21,7 +21,8 @@
   // to the next machine. Without this, everyone who had already opened the app
   // would keep the old stacked panels for ever and never see the tabs.
   // 2: Machine and Exercice became tabs of one group.
-  var LAYOUT_VERSION = 2;
+  // 3: the exercise left the dock for a bar under it; two panels remain.
+  var LAYOUT_VERSION = 3;
   var resizeHandlers = [];
 
   function api() {
@@ -45,7 +46,6 @@
 
     return {
       code: { title: 'Code', element: editor },
-      exercise: { title: 'Exercice', element: document.getElementById('exercise-panel') },
       machine: { title: 'Machine', element: machine },
     };
   }
@@ -56,11 +56,16 @@
     var defs = panelDefs();
     if (!dockview || !root || !defs) return null;
 
+    // The exercise bar is not a dock panel: it spans the app under both of
+    // them and collapses on its own. Take it out before the wipe, and put it
+    // back under the dock.
+    var exercise = document.getElementById('exercise-panel');
     var host = document.createElement('div');
     host.id = 'dock';
     host.className = 'dockview-theme-dark';
     root.innerHTML = '';
     root.appendChild(host);
+    if (exercise) root.appendChild(exercise);
 
     var component = dockview.createDockview(host, {
       className: 'dockview-theme-dark',
@@ -87,32 +92,16 @@
       },
     });
 
-    // Default: code on the left, and beside it one column holding Machine and
-    // Exercice as two tabs of the same group. Everything is draggable from
-    // here, and whatever the participant ends up with is what comes back next
-    // time.
-    //
-    // Tabs rather than a stack because the two do not fit above each other.
-    // Memory is eight rows; the exercise holds a title, the allowed
-    // instructions, a button and the results. Split vertically, on a 1280x800
-    // laptop, neither got enough: the memory table showed one row. Sharing the
-    // column full height, each is whole, and the cost is a click to go between
-    // them.
-    //
-    // Exercice opens active, because "Tester" lives in it and that is the
-    // button every step ends with — a primary action behind a tab is the same
-    // dead end as a primary action behind a covered toggle. The machine comes
-    // forward on its own the moment it becomes interesting, which is when the
-    // student runs or steps (ui.js calls focus() from both).
+    // Default: code and the machine side by side, both always on screen.
+    // Neither is ever a tab behind the other — a student reads the machine to
+    // understand what their code did, so hiding either to show the other is
+    // the wrong trade at any size. What used to compete with them for the
+    // space, the exercise, is the bar underneath now.
     function defaultLayout() {
       component.addPanel({ id: 'code', component: 'code', title: defs.code.title });
       component.addPanel({
-        id: 'exercise', component: 'exercise', title: defs.exercise.title,
-        position: { referencePanel: 'code', direction: 'right' },
-      });
-      component.addPanel({
         id: 'machine', component: 'machine', title: defs.machine.title,
-        position: { referencePanel: 'exercise', direction: 'within' },
+        position: { referencePanel: 'code', direction: 'right' },
       });
       // `initialWidth` on addPanel does not survive the split that creates the
       // group, so the sizes are set afterwards, through the panel API. Checked
@@ -148,8 +137,6 @@
           // unreadable, and the pane can be dragged narrow. Height needs no
           // share now — Machine and Exercice are tabs, so each has the column.
           if (machine) machine.api.setSize({ width: Math.max(300, Math.round(width * 0.42)) });
-          var exercise = component.getPanel('exercise');
-          if (exercise) exercise.api.setActive();
         } catch (e) { /* older dockview: leave the defaults */ }
       });
     }
@@ -213,20 +200,8 @@
     },
     /** Re-measure hook for anything that caches its own size. */
     onResize: function (handler) { resizeHandlers.push(handler); },
-    /**
-     * Bring a panel forward. Machine and Exercice share a group, so a result
-     * written into a tab nobody is looking at is a result nobody reads — the
-     * test run calls this. Silent when the panel is not there, or when the
-     * participant has dragged it into a group of its own and it is already
-     * visible.
-     */
-    focus: function (id) {
-      if (!this.component) return;
-      try {
-        var panel = this.component.getPanel(id);
-        if (panel) panel.api.setActive();
-      } catch (e) { /* nothing worth breaking a test run over */ }
-    },
+    /** Say the boxes changed. The exercise drawer opening is one such change. */
+    notifyResize: notifyResize,
     /** Put the panels back where they started. */
     reset: function () {
       try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
