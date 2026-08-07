@@ -44,10 +44,25 @@ describe('MiniASM UI', () => {
     it('has status element', () => {
       expect(html).toMatch(/id="status"/);
     });
+    it('has a way back to the default panel layout', () => {
+      // The saved layout follows the participant across sessions, so a layout
+      // dragged into a corner must be escapable from inside the app.
+      expect(html).toMatch(/id="btn-layout-reset"/);
+    });
+    it('does not let a panel be closed', () => {
+      // Closing the Code panel takes the toolbar and the editor with it, and
+      // the layout is saved: the dead frame comes back on reload.
+      expect(html).toMatch(/#dock \.dv-default-tab-action \{ display: none; \}/);
+    });
     it('has registers table', () => {
       expect(html).toMatch(/id="registers-table"/);
       expect(html).toMatch(/<thead/);
       expect(html).toMatch(/<tbody/);
+    });
+    it('does not repeat the "Registers" heading in the table header', () => {
+      const thead = html.match(/<table id="registers-table">[\s\S]*?<\/thead>/)[0];
+      expect(thead).not.toMatch(/data-i18n="registers"/);
+      expect(thead).toMatch(/data-i18n="value"/);
     });
     it('has memory table', () => {
       expect(html).toMatch(/id="memory-table"/);

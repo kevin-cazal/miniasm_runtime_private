@@ -23,6 +23,7 @@
     speedInstant: 'Instantané',
     resetOnEdit: 'Réinitialiser le programme à chaque édition',
     confirmRestart: 'Le programme est terminé. Recommencer depuis le début ?',
+    layoutReset: 'Replacer les panneaux',
     navTutorials: 'Tutoriels',
     navChallenges: 'Défis',
     typeTutorial: 'tutoriel',
@@ -52,6 +53,8 @@
     hintsNone: '(plus d\'indices)',
     alreadyCompleted: '✅ Déjà valide !',
     dropdownPlaceholder: 'Défis ▾',
+    sandboxPanelTitle: '🏖️ Bac à sable',
+    sandboxPanelNote: 'Ici tu essaies ce que tu veux, rien n\'est noté.\nReviens sur l\'onglet de l\'exercice pour le tester.',
 
     // Test results
     forbiddenSingular: '⚠️ Instruction interdite',

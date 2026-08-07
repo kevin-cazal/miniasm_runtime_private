@@ -82,10 +82,6 @@
     // machine needs a real share, and a floor for when the pane is dragged
     // narrow.
     function defaultLayout() {
-      var width = host.clientWidth || 900;
-      var height = host.clientHeight || 600;
-      var machineWidth = Math.max(300, Math.round(width * 0.42));
-
       component.addPanel({ id: 'code', component: 'code', title: defs.code.title });
       component.addPanel({
         id: 'machine', component: 'machine', title: defs.machine.title,
@@ -99,18 +95,57 @@
       // group, so the sizes are set afterwards, through the panel API. Checked
       // by measuring, not by assuming: without this the machine opened as a
       // strip about 100px wide.
-      sizeAfterLayout(machineWidth, Math.round(height * 0.45));
+      sizeAfterLayout();
     }
 
-    function sizeAfterLayout(machineWidth, exerciseHeight) {
-      requestAnimationFrame(function () {
+    /**
+     * dockview learns its own size from a ResizeObserver, which has not fired
+     * yet on the frame the panels are added: `component.width` reads 0 there,
+     * every group is 100px, and a setSize against that is thrown away when the
+     * real size arrives — which is why the panes always opened at an even
+     * 50/50, however loudly the code asked for something else. Embedded it is
+     * worse: the pane animates open, so the first non-zero width is not the
+     * final one either. Wait for two frames that agree, take the shares from
+     * that width, and give up rather than spin.
+     */
+    function sizeAfterLayout() {
+      var attempts = 0;
+      var previous = 0;
+      requestAnimationFrame(function apply() {
+        var width = component.width;
+        var height = component.height;
+        if (!width || !height || width !== previous) {
+          previous = width;
+          if (attempts++ < 120) requestAnimationFrame(apply);
+          return;
+        }
         try {
           var machine = component.getPanel('machine');
           var exercise = component.getPanel('exercise');
-          if (machine) machine.api.setSize({ width: machineWidth });
-          if (exercise) exercise.api.setSize({ height: exerciseHeight });
+          // A floor for the machine: a register table narrower than this is
+          // unreadable, and the pane can be dragged narrow.
+          if (machine) machine.api.setSize({ width: Math.max(300, Math.round(width * 0.42)) });
+          // The exercise panel holds a title, the allowed instructions, one
+          // button and the results — a fixed amount of content. Given a share
+          // of the column it took half, and on a 1280x800 laptop that left the
+          // memory table under it about 50px tall: one sliced row. Cap it —
+          // but not below what a failing run needs, or the verdict under the
+          // test lines is the thing that falls off the bottom.
+          if (exercise) exercise.api.setSize({ height: Math.min(340, Math.round(height * 0.45)) });
         } catch (e) { /* older dockview: leave the defaults */ }
       });
+    }
+
+    // A layout is only worth restoring if it still holds every panel. Earlier
+    // builds let a tab be closed, and that layout was saved and then followed
+    // the participant into every later session — an app with no editor, and no
+    // way back. Treat a short layout as no layout.
+    function isComplete() {
+      var ids = Object.keys(defs);
+      for (var i = 0; i < ids.length; i++) {
+        if (!component.getPanel(ids[i])) return false;
+      }
+      return true;
     }
 
     var restored = false;
@@ -118,7 +153,7 @@
       var saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         component.fromJSON(JSON.parse(saved));
-        restored = component.panels.length > 0;
+        restored = component.panels.length > 0 && isComplete();
       }
     } catch (e) {
       restored = false;

@@ -44,7 +44,10 @@
       window.MiniASM.loadProgram(machine, { source: getSource() });
       return true;
     } catch (e) {
-      alert(T('parseError') + e.message);
+      // A typo is the most common thing a beginner does, and answering it with
+      // a browser alert means a modal stamped with the host's domain on top of
+      // the workshop page. Say it where the machine already reports itself.
+      showError(T('parseError') + e.message);
       return false;
     }
   }
@@ -211,6 +214,12 @@
 
   // ─── Status & PC highlight ──────────────────────────────────────────
 
+  function showError(message) {
+    var el = document.getElementById('status');
+    el.textContent = message;
+    el.className = 'status error';
+  }
+
   function updateStatus() {
     var el = document.getElementById('status');
     if (!machine) { el.textContent = T('stopped'); el.className = 'status'; return; }
@@ -357,7 +366,13 @@
       if (!loadProgram()) return;
     }
     if (machine.halted || machine.pc >= machine.code.length) {
-      loadProgram();
+      // loadProgram only re-parses; it leaves pc and halted where they were, so
+      // stepping past the end of a program did nothing at all and the button
+      // looked broken. Rewind here, and keep whatever the registers hold —
+      // Réinitialiser is the control that clears them.
+      if (!loadProgram()) return;
+      machine.pc = 0;
+      machine.halted = false;
     }
     if (machine.pc < machine.code.length && !machine.halted) {
       window.MiniASM.execute(machine);
@@ -724,14 +739,7 @@
       }
     }
 
-    // Show/hide exercise UI
-    var panel = document.getElementById('exercise-panel');
-    if (currentExercise) {
-      panel.classList.add('visible');
-      updateExercisePanel();
-    } else {
-      panel.classList.remove('visible');
-    }
+    renderExercisePanel();
 
     // Update everything
     updateNavButtons();
@@ -745,6 +753,23 @@
   }
 
   // ─── Exercise panel ─────────────────────────────────────────────────
+
+  /**
+   * The exercise panel is a dock panel with a tab of its own, so hiding it in
+   * the sandbox left the tab standing over an empty rectangle. Keep the panel
+   * and say which of the two states it is in.
+   */
+  function renderExercisePanel() {
+    var panel = document.getElementById('exercise-panel');
+    panel.classList.add('visible');
+    panel.classList.toggle('sandbox', !currentExercise);
+    if (currentExercise) {
+      updateExercisePanel();
+      return;
+    }
+    document.getElementById('ex-title').textContent = T('sandboxPanelTitle');
+    document.getElementById('ex-sandbox-note').textContent = T('sandboxPanelNote');
+  }
 
   function updateExercisePanel() {
     if (!currentExercise) return;
@@ -993,6 +1018,15 @@
   document.getElementById('btn-mode-blocks').addEventListener('click', function () { setEditorMode('blocks'); });
   document.getElementById('mode-nav').addEventListener('click', handleNavClick);
 
+  // The saved layout outlives the session, so there has to be a way back to the
+  // default one from inside the app.
+  (function () {
+    var btn = document.getElementById('btn-layout-reset');
+    if (!btn) return;
+    if (!window.MiniASMLayout) { btn.style.display = 'none'; return; }
+    btn.addEventListener('click', function () { window.MiniASMLayout.reset(); });
+  })();
+
   // Cheat overlay: button + close (only when enableCheats is true)
   (function () {
     var overlay = document.getElementById('cheat-overlay');
@@ -1089,6 +1123,7 @@
     // Build nav & initialize
     setupDropdown();
     buildNavButtons();
+    renderExercisePanel();
     machine = createMachine();
     loadProgram();
     refreshTables();

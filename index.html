@@ -112,6 +112,27 @@
       color: #f9e2af;
       border-color: #6c7086;
     }
+    /* The saved layout follows the participant across sessions and machines, so
+       a layout dragged into a corner has to have a way back that is not "ask
+       the teacher to clear your browser storage". */
+    .nav-layout-btn {
+      margin-left: auto;
+      margin-top: 6px;
+      margin-bottom: 6px;
+      font-family: inherit;
+      font-size: 11px;
+      padding: 0 10px;
+      height: 30px;
+      border: 1px solid #45475a;
+      border-radius: 4px;
+      background: #313244;
+      color: #6c7086;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .nav-layout-btn:hover { color: #cdd6f4; border-color: #6c7086; }
+    .nav-layout-btn + .nav-lang-select,
+    .nav-layout-btn ~ .nav-cheat-btn { margin-left: 8px; }
     .nav-lang-select {
       margin-left: auto;
       margin-top: 6px;
@@ -207,24 +228,35 @@
       flex-direction: column;
       border-right: 1px solid #313244;
     }
+    /*
+       Embedded, this toolbar lives in a pane about 400px wide, and its natural
+       width is half as much again. A single nowrap row solved that by shrinking
+       its children: the Code/Blocks toggle collapsed to a 9px sliver clipped by
+       its own `overflow: hidden`, and the speed slider, its value and the run
+       status fell off the right edge — all of them still "visible" to CSS and
+       to a click through the DOM. Let it wrap instead, and let nothing shrink.
+    */
     .panel-editor .toolbar {
       flex: 0 0 auto;
-      padding: 8px 12px;
+      padding: 8px;
       background: #181825;
       border-bottom: 1px solid #313244;
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       align-items: center;
     }
+    .panel-editor .toolbar > * { flex: 0 0 auto; }
     .panel-editor .toolbar button {
       font-family: inherit;
       font-size: 13px;
-      padding: 6px 14px;
+      padding: 6px 10px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
       background: #45475a;
       color: #cdd6f4;
+      white-space: nowrap;
     }
     .panel-editor .toolbar button:hover {
       background: #585b70;
@@ -276,7 +308,7 @@
       border-radius: 0;
       border: none;
       margin: 0;
-      padding: 6px 12px;
+      padding: 6px 10px;
       font-size: 12px;
     }
     .toolbar .mode-toggle button.active {
@@ -285,6 +317,13 @@
     }
 
     /* ─── Blockly overrides ──────────────────────────── */
+    /* Blockly's toolbox ships a light grey box, which in this dark app reads as
+       a hole in the panel. The category rows below were already restyled; the
+       box around them was missed. */
+    .blocklyToolboxDiv {
+      background-color: #181825 !important;
+      border-right: 1px solid #313244;
+    }
     .blocklyToolboxCategoryName {
       color: #f5f5f7 !important;
       font-weight: 600;
@@ -297,6 +336,12 @@
       color: #e6e6ea !important;
     }
     .blocklyFlyoutBackground { fill: #313244; }
+    /* The workspace is a white sheet in a dark app. Filling the background rect
+       does nothing once a grid is configured: Blockly then sets that rect's
+       fill inline, to the grid pattern, and the pattern is transparent between
+       its dots — so what shows through is `.blocklySvg`, whose own stylesheet
+       paints it white. Colour the sheet, and the grid stays a grid. */
+    .blocklySvg { background-color: #1e1e2e; }
     .blocklyMainBackground { fill: #1e1e2e; }
     .blocklyScrollbarHandle { fill: #45475a; }
 
@@ -328,6 +373,15 @@
       max-height: none;
     }
     body.docked #exercise-panel { max-height: none; overflow-y: auto; }
+    /*
+       No close button on the tabs. The three panels are the app: closing Code
+       takes the editor and the whole toolbar with it, and since ui.js wires
+       those buttons at load, the next reload throws before it can define
+       MiniASMEmbed — leaving a dead frame the platform can no longer drive.
+       The layout is saved, so a reload brings the dead frame back. dockview has
+       no per-panel option for this, so the affordance goes instead.
+    */
+    #dock .dv-default-tab-action { display: none; }
     /* dockview's dark theme, tuned to this app's palette. */
     .dockview-theme-dark {
       --dv-group-view-background-color: #1e1e2e;
@@ -419,6 +473,21 @@
       font-size: 12px;
       color: #6c7086;
     }
+    /* In the sandbox there is no exercise, and the panel used to go away
+       entirely — leaving a tab called "Exercise" over an empty rectangle. Say
+       what the pane is instead. */
+    .ex-note {
+      display: none;
+      padding: 8px 14px 12px;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-line;
+      color: #6c7086;
+    }
+    #exercise-panel.sandbox .ex-note { display: block; }
+    #exercise-panel.sandbox .ex-available,
+    #exercise-panel.sandbox .ex-actions,
+    #exercise-panel.sandbox #test-results { display: none; }
     .ex-available code {
       background: #313244;
       color: #cdd6f4;
@@ -606,7 +675,15 @@
       border-bottom: 1px solid #313244;
     }
     .table-block.registers { flex: 0 0 auto; }
-    .table-block.memory { flex: 1; min-height: 0; }
+    /*
+       The memory table used to take whatever height was left and scroll inside
+       it. On a 1280x800 laptop that left was 89px — a column header and one
+       sliced row, inside a box the eye does not read as scrollable, inside a
+       pane that scrolls too. Let the table be its own height and let the one
+       scrollbar the pane already has do the work.
+    */
+    .table-block.memory { flex: 0 0 auto; }
+    .table-block.memory .table-wrap { overflow-y: visible; }
     .table-block:last-child { border-bottom: none; }
     .table-block h3 {
       margin: 0;
@@ -658,14 +735,15 @@
     .speed-value {
       font-size: 11px;
       color: #89b4fa;
-      min-width: 42px;
+      min-width: 38px;
       text-align: right;
       font-variant-numeric: tabular-nums;
+      white-space: nowrap;
     }
     #speed-slider {
       -webkit-appearance: none;
       appearance: none;
-      width: 90px;
+      width: 70px;
       height: 4px;
       background: #45475a;
       border-radius: 2px;
@@ -702,9 +780,18 @@
       font-size: 12px;
       color: #6c7086;
       margin-left: auto;
+      white-space: nowrap;
+      /* the only item allowed to shrink: a parse error is as long as the typo */
+      flex: 0 1 auto;
+      min-width: 0;
     }
     .status.halted { color: #f38ba8; }
     .status.running { color: #a6e3a1; }
+    /* A program that does not parse used to say so in a browser alert, which in
+       an embedded frame is a modal dialog with the host's domain on it. The
+       status line is where the student is already looking for the machine's
+       answer. */
+    .status.error { color: #fab387; white-space: normal; }
 
     /* ─── Cheat overlay (internal tool) ─────────────────────── */
     .cheat-overlay {
@@ -824,6 +911,7 @@
         <!-- Category items generated dynamically by ui.js -->
       </div>
     </div>
+    <button type="button" id="btn-layout-reset" class="nav-layout-btn" data-i18n="layoutReset">Reset panels</button>
     <select id="lang-select" class="nav-lang-select" aria-label="Language"></select>
     <button type="button" id="btn-cheat-progress" class="nav-cheat-btn" style="display: none;" title="Jump to any exercise (dev only)">(DEBUG) Jump to exercise</button>
   </nav>
@@ -867,6 +955,7 @@
           <h3 id="ex-title"></h3>
 
         </div>
+        <div class="ex-note" id="ex-sandbox-note"></div>
         <div class="ex-available" id="ex-available"></div>
         <div class="ex-actions">
           <button class="primary" id="btn-panel-test" data-i18n="btnTest">▶ Test</button>
@@ -888,7 +977,10 @@
         <h3 data-i18n="registers">Registers</h3>
         <div class="table-wrap">
           <table id="registers-table">
-            <thead><tr><th data-i18n="registers">Registers</th><th data-i18n="value">Value</th></tr></thead>
+            <!-- The block already carries the heading "Registers"; repeating it
+                 as the first column header printed the word twice, one line
+                 apart. The memory table leaves the same cell empty. -->
+            <thead><tr><th></th><th data-i18n="value">Value</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>

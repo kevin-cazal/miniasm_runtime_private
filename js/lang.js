@@ -24,6 +24,7 @@
       speedInstant: 'Instant',
       resetOnEdit: 'Reset program on edit',
       confirmRestart: 'Program has finished. Restart from the beginning?',
+      layoutReset: 'Reset panels',
       navTutorials: 'Tutorials',
       navChallenges: 'Challenges',
       typeTutorial: 'tutorial',
@@ -53,6 +54,8 @@
       hintsNone: '(none left)',
       alreadyCompleted: '✅ Already completed!',
       dropdownPlaceholder: 'Challenges ▾',
+      sandboxPanelTitle: '🏖️ Sandbox',
+      sandboxPanelNote: 'Try anything you like here. Nothing is graded.\nGo back to the exercise tab to test it.',
 
       // ─── Test results ─────────────────────────────────────────
       forbiddenSingular: '⚠️ Forbidden instruction',
